@@ -4,12 +4,28 @@ def ffplay?
   ARGV.include? '--with-ffplay'
 end
 
+def libaacplus?
+  ARGV.include? '--enable-libaacplus'
+end
+
 class Ffmpeg < Formula
   homepage 'http://ffmpeg.org/'
   url 'http://ffmpeg.org/releases/ffmpeg-0.10.3.tar.bz2'
   sha1 '4fb6f682dbc1b4ea54178040d515fc3a4c05d415'
 
   head 'git://git.videolan.org/ffmpeg.git'
+
+  fails_with :llvm do
+      cause 'Undefined symbols when linking libavfilter'
+  end
+
+  def options
+    [
+      ["--with-tools", "Install additional FFmpeg tools."],
+      ["--with-ffplay", "Build ffplay."],
+      ["--enable-libaacplus", "Enable libaacplus"]
+    ]
+  end
 
   depends_on 'yasm' => :build
   depends_on 'x264' => :optional
@@ -22,7 +38,6 @@ class Ffmpeg < Formula
   depends_on 'libvpx' => :optional
   depends_on 'xvid' => :optional
   depends_on 'opencore-amr' => :optional
-  depends_on 'libvo-aacenc' => :optional
   depends_on 'libass' => :optional
 
   depends_on 'sdl' if ffplay?
@@ -60,8 +75,8 @@ class Ffmpeg < Formula
     args << "--enable-libopencore-amrnb" if Formula.factory('opencore-amr').linked_keg.exist?
     args << "--enable-libopencore-amrwb" if Formula.factory('opencore-amr').linked_keg.exist?
     args << "--enable-libass" if Formula.factory('libass').linked_keg.exist?
-    args << "--enable-libvo-aacenc" if Formula.factory('libvo-aacenc').linked_keg.exist?
     args << "--disable-ffplay" unless ffplay?
+    args << "--enable-libaacplus" if libaacplus?
 
     # For 32-bit compilation under gcc 4.2, see:
     # http://trac.macports.org/ticket/20938#comment:22
